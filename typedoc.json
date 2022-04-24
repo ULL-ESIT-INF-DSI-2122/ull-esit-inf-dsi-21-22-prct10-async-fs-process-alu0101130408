@@ -1,0 +1,7 @@
+{
+	"entryPoints": [
+		"./src/ejercicio1clase.ts",
+        "./src/name_exercice"
+	], 
+	"out": "./docs/typedoc"
+}
