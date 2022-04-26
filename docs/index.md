@@ -13,8 +13,11 @@
 2. [Desarrollo.](#id2)
       
       2.1. [Ejercicio 1.](#id21)
+
       2.2. [Ejercicio 2.](#id22)
+
       2.3. [Ejercicio 3.](#id23)
+      
       2.4. [Ejercicio 4.](#id24)
 
 3. [Dificultades.](#id3)
