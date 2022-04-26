@@ -1,3 +1,6 @@
+/**
+ * Programa encargado de analizar cambios que se realicen a un fichero.
+ */
 import {access, constants, watch} from 'fs';
 
 if (process.argv.length !== 3) {
@@ -20,4 +23,5 @@ if (process.argv.length !== 3) {
       console.log(`File ${filename} is no longer watched`);
     }
   });
+  console.log('Esta es la última línea.');
 }

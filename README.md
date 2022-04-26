@@ -7,7 +7,8 @@
 
 ## Introducción:
 
-El Objetivo de esta práctica es realizar una serie de ejercicios con el sistema de ficheros que proporciona node jd
+El Objetivo de esta práctica es implementar diversas soluciones para resolver una serie de ejercicios que se nos propone haciendo uso de TypeScript y diversos modulos que hemos visto como chalk y yargs además de utilizar las APIs proporcionadas por Node.js para interacturar con el sistema de ficheros y callbacks. 
+
 > Para acceder al informe de la práctica 10 piche [aquí]()
 
 > Para acceder al informe a través de Github Pages, pinche [aquí]()
