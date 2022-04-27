@@ -78,12 +78,79 @@ if (process.argv.length !== 3) {
   console.log('Esta es la última línea.');
 }
 ```
-Aqui va la explicacion de las colas de node.js
+Tal y como se nos pide, se realizará una traza de la ejecución del programa. Pero primero ¿Qué hace la función access? La función `access` del módulo *fs* de Node.js es una función que permite comprobar los permisos que tiene un usuario sobre un archivo, que ejecuta en nuestro caso el programa y ¿Para qué sirve el objeto constants? es un objeto que recoge distintos flags para la funcion access de fs. Basicamente fs.access recibe como parámetro un objeto constants y dependiendo de este flag comprueba el permiso que se especifica. En el ejemplo que tenemos, se utiliza **F_OK** para comprobar que el usuario pueda visualizar el fichero otras alternativas que recoge este objeto son: **R_OK**, **W_OK**, **X_OK** que permiten analizar los permisos de lectura, escritura y ejecucion.
 
-Como puede verse, la estructura de las colas es la siguiente
+En cuanto a la ejecución del programa, hay que ejecutarlo como se ha visto en la asignatura y se le pasa el nombre del fichero que se quiere ejecutar, en este caso, el fichero `helloWorld.txt`. una vez ejecutado este programa se podra observar como su ejecución es asincrona esto es ocacionado por la función fs.watch y por todos los objetos de clase EventEmitterse que se ejecutan cuando se cumple una condición. Pero, ¿Y si se cumplen diversas condiciones a la vez? para manejar esto, node.js implementa diversas pilas de las cuales va haciendo uso. Más concretamente en nuestro programa el funcionamiento es el siguiente:
 
-|Cabecera 1|Cabecera 2|Cabecera 3|
-|----------|----------|----------|
+* Inicialmente están vacías.
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA |  
+|------------------|-------------------|-----------------|---------|
+|                  |                   |                 |         |
+
+* Tras ejecutar el programa, la función main entra en la pila de llamada.
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA |  
+|------------------|-------------------|-----------------|---------|
+|main()            |                   |                 |         |
+
+* A continuación puede ocacionarse dos posibles casos.Se analiza la condicion de que `process.argv.lenght` sea distinto de 3 argumentos que se pasan por linea de comando, en caso de cumplirse, entra el console.log a la pila de llamadas:
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA |  
+|------------------|-------------------|-----------------|---------|
+|main()            |                   |                 |         |
+|console.log('...')|                   |                 |         |           
+
+* Se saca de la pila de llamadas el console.log correspondiente y se imprime por pantalla su mensaje
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA                        |  
+|------------------|-------------------|-----------------|--------------------------------|
+|main()            |                    |                 | console.log('Please, specify') |
+       
+* el main acaba y se saca de la pila de llamadas y el programa finalizada
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA                        |  
+|------------------|-------------------|-----------------|--------------------------------|
+|                  |                   |                 | console.log('Please, specify') |
+
+* En caso de no cumplirse, la comprobación y se pasen los argumentos correctos. Entra `access` a la pila de llamadas:
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA |  
+|------------------|-------------------|-----------------|---------|
+|main()            |                   |                 |         |
+|access(...)       |                   |                 |         |          
+
+* A continuación access sale de la pila de llamadas y entra en el registo de eventos la API de Node.js. y Posteriormente sale la función main de la pila de llamadas.
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA |  
+|------------------|-------------------|-----------------|---------|
+|                  |access(...)        |                 |         |
+
+* `access` pasa a la cola de Manejadores (cola de Callback). 
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA |  
+|------------------|-------------------|-----------------|---------|
+|anonymous(access) |                   |access(...)      |         |
+
+* Pero como esta vacía la pila de llamadas. entra access a la pila de llamadas, se ejecuta y entra el `console.log`:
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA |  
+|------------------|-------------------|-----------------|---------|
+|access(...)       |                   |                 |         |
+|console.log(...)  |                   |                 |         |
+
+* se ejecuta `console.log` y se muestra por pantalla su contenido
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA                        |  
+|------------------|-------------------|-----------------|--------------------------------|
+|acces(...)        |                   |                 | console.log('Starting watch')  |
+
+* Se ejecuta La función `watch(process.argv[2])`  y como no es un bucle iterado, sale de la pila de llamadas. Más tarde entra en la pilla de llamadas la funcion `watcher.on`:
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA                        |  
+|------------------|-------------------|-----------------|--------------------------------|
+|acces(...)        |                   |                 | console.log('Starting watch')  |
+|watcher.on(...)   |                   |                 |                                |
 
 
 <br/><br/>
@@ -163,3 +230,5 @@ Los objetivos que se han propuesto y se han cumplido son:
 17. [Documentacion sobre como crear tablas en Markdown](https://limni.net/crear-tablas-markdown-tableflip/)
 18. [APIs de CallBacks para interactuar con el sistema de ficheros](https://nodejs.org/dist/latest-v18.x/docs/api/fs.html#callback-api)
 19. [APIs asincrona para crear procesos](https://nodejs.org/dist/latest-v18.x/docs/api/child_process.html#asynchronous-process-creation)
+20. [Funcion access de fs ](https://es.acervolima.com/node-js-metodo-fs-access/)
+21. [Objeto constat](https://www.geeksforgeeks.org/node-js-fs-access-method/)
