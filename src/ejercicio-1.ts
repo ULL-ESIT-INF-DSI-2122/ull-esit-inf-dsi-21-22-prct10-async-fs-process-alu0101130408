@@ -23,5 +23,4 @@ if (process.argv.length !== 3) {
       console.log(`File ${filename} is no longer watched`);
     }
   });
-  console.log('Esta es la última línea.');
 }

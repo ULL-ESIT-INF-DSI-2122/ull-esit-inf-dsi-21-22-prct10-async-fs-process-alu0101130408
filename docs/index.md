@@ -75,7 +75,6 @@ if (process.argv.length !== 3) {
       console.log(`File ${filename} is no longer watched`);
     }
   });
-  console.log('Esta es la última línea.');
 }
 ```
 Tal y como se nos pide, se realizará una traza de la ejecución del programa. Pero primero ¿Qué hace la función access? La función `access` del módulo *fs* de Node.js es una función que permite comprobar los permisos que tiene un usuario sobre un archivo, que ejecuta en nuestro caso el programa y ¿Para qué sirve el objeto constants? es un objeto que recoge distintos flags para la funcion access de fs. Basicamente fs.access recibe como parámetro un objeto constants y dependiendo de este flag comprueba el permiso que se especifica. En el ejemplo que tenemos, se utiliza **F_OK** para comprobar que el usuario pueda visualizar el fichero otras alternativas que recoge este objeto son: **R_OK**, **W_OK**, **X_OK** que permiten analizar los permisos de lectura, escritura y ejecucion.
@@ -151,6 +150,55 @@ En cuanto a la ejecución del programa, hay que ejecutarlo como se ha visto en l
 |------------------|-------------------|-----------------|--------------------------------|
 |acces(...)        |                   |                 | console.log('Starting watch')  |
 |watcher.on(...)   |                   |                 |                                |
+
+* La función watcher.on() sale de la pila de llamadas y entra al registro de eventos de la API de Node.js
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA                        |  
+|------------------|-------------------|-----------------|--------------------------------|
+|acces(...)        |watcher.on(...)    |                 | console.log('Starting watch')  |
+
+* La función watcher.on() esperará a que se produzca algún cambio en ese fichero, así que ahora entra a la pila de llamadas el console.log(File ${filename} is no longer watched) correspondiente.
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA                        |  
+|------------------|-------------------|-----------------|--------------------------------|
+|acces(...)        |watcher.on(...)    |                 | console.log('Starting watch')  |
+|console.log(File) |                   |                 |                                |
+
+* Se ejecuta el console.log que ha entrado, sale de la pila de llamadas y se muestra por consola su mensaje:
+
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK| CONSOLA                        |  
+|------------------|-------------------|-----------------|--------------------------------|
+|acces(...)        |watcher.on(...)    |                 | console.log('Starting watch')  |
+|                  |                   |                 | console.log(File is no watched)|
+
+* Con esto ya se ha recorrido todo el codigo, por lo que sale `access ` de la pila de llamadas y el programa se queda esperando. Ahora realizaremos una modificación en el fichero `helloWorld.txt` que es el archivo que estamos analizando. Por lo que se detectará con la función **watcher.on** que estaba esperando y se mandara a la cola de manejadores de node.js el console.log con el mensaje *has been modified somehow*.
+
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK    | CONSOLA                        |  
+|------------------|-------------------|---------------------|--------------------------------|
+|                  |watcher.on(...)    |console.log(modified)| console.log('Starting watch')  |
+|                  |                   |                     | console.log(File is no watched)|
+
+* Se detecta el console.log y se manda a la pila de llamadas:
+
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK    | CONSOLA                        |  
+|------------------|-------------------|---------------------|--------------------------------|
+|console.log(modif)|watcher.on(...)    |                     | console.log('Starting watch')  |
+|                  |                   |                     | console.log(File is no watched)|
+
+* Se ejecuta el console.log saliendo de la pila de llamadas u mostrando por consola su contenido
+
+| Pila de llamadas |REGISTRO DE EVENTOS| COLA DE CALLBACK    | CONSOLA                        |  
+|------------------|-------------------|---------------------|--------------------------------|
+|                  |watcher.on(...)    |                     | console.log('Starting watch')  |
+|                  |                   |                     | console.log(File is no watched)|
+|                  |                   |                     | console.log(modified)          |
+
+* De esta forma por cada cambio mostrará un respectivo mensaje por consola. Así funciona las pilas de node.js para el programa especifico que se nos ha solicitado. 
+
+Debido a que solo se nos solicita en el enunciado que realizemos las respuestas a las preguntas planteadad y que se haga la traza de la ejecución del programa, no se ha podido realizar las pruebas unitarias puesto que los test con mocha solo se pueden realizar sobre variables y estructuras de datos.
 
 
 <br/><br/>
