@@ -1,7 +1,9 @@
 {
 	"entryPoints": [
 		"../src/modificacion/modificacionLunes.ts",
-		"../src/ejercicio-1.ts"
+		"../src/ejercicio-1/ejercicio-1.ts",
+		"../src/ejercicio-2/ejercicio-2.ts",
+		"../src/ejercicio-2/searchWord.ts"
 	], 
 	"out": "./docs/typedoc"
 }

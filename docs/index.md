@@ -205,6 +205,21 @@ Debido a que solo se nos solicita en el enunciado que realizemos las respuestas 
 
 ### 2.2. Ejercicio 2. <a name="id22"></a>
 
+Para ejecutar el ejercicio es necesario conocer acerca de su funcionamiento. Para ello tras ejecutar el comando `tsc` en la linea de comandos se generará la carpeta dist que contendrá la interpretación de los ficheros en Javascript. Posteriormente si queremos ejecutar el programa referente al ejercicio numero dos, se deberá añadir en el campo **file** la ruta o el nombre del fichero donde realizar la búsqueda, en el campo **word** la palabra que se desea buscar en el fichero y en el campo **pipe** *false* en caso de querer realizar las búsquedas con los manejadores que se han implementado para esta operación o *true* si se desea buscar a través del método pipe de un Stream proporcionado por Node.js. Un ejemplo de la ejecución del programa en la bash de linux sería el siguiente:
+
+```
+$ node dist/ejercicio-2/ejercicio-2.js search --file="prueba.txt" --word="Hola" --pipe=true
+```
+De esta forma con search indicamos que queremos buscar en el fichero `prueba.txt` la palabra `Hola` a través del método pipe de los Streams de Node.js.  Y este devolverá por consola un mensaje en caso de que el fichero exista y un mensaje con el número de palabras que se ha encontrado. En caso de introducir valores que no existen el programa los reconocerá y visualizará mensajes de error. La salida del ejemplo anterior sería:
+
+```
+El fichero introducido si existe, su nombre es: prueba.txt
+Se ha encontrado 3 palabras que coinciden con Hola
+```
+
+Toda esta funcionalidad la hemos desarrollado en el la carpeta src/ejercicio-2/*. Dentro podemos notar que se han creados dos ficheros.
+* **ejercicio-2.ts**
+* **searchWord.ts**
 
 ```TypeScript
 
@@ -280,3 +295,6 @@ Los objetivos que se han propuesto y se han cumplido son:
 19. [APIs asincrona para crear procesos](https://nodejs.org/dist/latest-v18.x/docs/api/child_process.html#asynchronous-process-creation)
 20. [Funcion access de fs ](https://es.acervolima.com/node-js-metodo-fs-access/)
 21. [Objeto constat](https://www.geeksforgeeks.org/node-js-fs-access-method/)
+22. [Expresiones regulares en JavaScript](https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Regular_Expressions)
+23. [Pipe en Node.JS](https://guru99.es/node-js-streams-filestream-pipes/)
+24. [Documentacion de Stream en Node.js](https://nodejs.org/api/stream.html)
