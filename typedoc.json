@@ -1,9 +1,15 @@
 {
 	"entryPoints": [
-		"../src/modificacion/modificacionLunes.ts",
-		"../src/ejercicio-1/ejercicio-1.ts",
-		"../src/ejercicio-2/ejercicio-2.ts",
-		"../src/ejercicio-2/searchWord.ts"
+		"./src/modificacion/modificacionLunes.ts",
+		"./src/ejercicio-1/ejercicio-1.ts",
+		"./src/ejercicio-2/ejercicio-2.ts",
+		"./src/ejercicio-2/searchWord.ts",
+		"./src/ejercicio-3/ejercicio-3.ts",
+		"./src/ejercicio-3/app/user.ts",
+		"./src/ejercicio-3/app/bdd.ts",
+		"./src/ejercicio-3/app/note.ts",
+		"./src/ejercicio-3/app/index.ts",
+		"./src/ejercicio-4/ejercicio-4.ts"
 	], 
 	"out": "./docs/typedoc"
 }
