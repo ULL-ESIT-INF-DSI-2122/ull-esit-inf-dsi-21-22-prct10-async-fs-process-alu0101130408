@@ -1,0 +1,20 @@
+{
+  "User": [
+    {
+      "name": "Joel",
+      "notes": [
+        {
+          "title": "titulo",
+          "body": "cuerpo",
+          "color": "Red"
+        },
+        {
+          "title": "lista de compra",
+          "body": "huevos, queso, leche",
+          "color": "Yellow"
+        }
+      ],
+      "id": 45
+    }
+  ]
+}
