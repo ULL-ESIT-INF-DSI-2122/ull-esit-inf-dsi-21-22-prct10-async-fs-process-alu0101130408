@@ -361,17 +361,110 @@ No se ha podido realizar pruebas por lo comentado con anterioridad.
 
 ### 2.3. Ejercicio 3. <a name="id23"></a>
 
-En el ejercicio 3 nos solicitan 
+En el ejercicio 3 nos solicitan a través del ejercicio realizado en la práctica anterior (práctica 9), correspondiente a implementar un sistema que permita la manipulación de notas por parte de diferentes usuarios. A partir de este ejercicio, se solicita realizar un programa que permita controlar los cambios realizados sobre todo el directorio especificado al mismo tiempo que dicho usuario interactúa con la aplicación de procesamiento de notas. De esta forma se espera que esta aplicación muestre un mensaje en caso de que añada, elimine o modifique alguna nota dentro del sistema.
+
+Por lo que para ejecutarla a través de línea de comando he decicido hacer uso de la herramienta `yargs` que permite analizar a través de línea de comando las opciones que el usuario introdusca. Tras importar en la carpeta toda la aplicación de la práctica anterior para comprobar el funcionamiento de esta se ha creado el fichero **ejercicio-3.ts** que se encarga de realizar la funcionalizad para analizar la base de datos del sistema de notas.
+
+Para ello con yargs implementamos el comando `watch` y esperamos que el usuario introduzca de forma obligatoria dos opciones. user, que será el usuario que se desea analizar y path que será la ruta de la carpeta a analizar (que se espera que sea la ruta de la base de datos). Una vez introducido estos valores entramos al manejador de yargs que será  *handler* y analizamos si el tipo recogido en las dos opciones son string es decir cadenas de caracteres en caso de que asi sea entonces creamos la ruta del fichero en un variable añadiendole *'./ ruta/usuario', posteriormente se comprueba si se puede acceder a este ruta usando `fs.access`, en caso afirmativo, utilizamos `fs.watch()` para crear un objeto watcher que dará la información sobre los cambios que ocurran en el directorio. Para conseguir esto hacemos uso de un **Callback** en el cual se declaran dos variables, **type** y **filename** que indica que tipo de accion ha sucedido y sobre que carpeta. A continuación se crea la ruta absoluta del fichero y se analizan los posibles cambios que pudo haber sucedido. 
+
+Para analizar estos cambios, **type** solo puede recoger dos posibles valores, por un lado *rename* que en caso de aparecer significa que se ha añadido o borrado un fichero dentro del directorio tal y como figura en la documentación y por otro lado *change* que indica si ha habido alguna modificacion dentro del fichero de un directorio.
+
+en el primer caso, en el de rename, comprobamos que se pueda acceder a través de `fs.access` a la ruta absoluta que se creo con anterioridad. En caso de que al acceder al fichero surja un error, esto implica que el fichero ha sido borrado, mientras que si se puede acceder a el sin problemas significa que el fichero se ha creado. En caso de crearse aprovecho y muestro a través de `fs.readFile` el contenido del fichero que se ha creado.
+
+En caso de que el typo de evento que surja sea `change` significa que se ha producido algun cambio sobre el fichero. Por lo que si **type** obtiene este valor, entonces lo comunicamos a través de consola y mostramos el contenido actual del fichero modificado con `fs.readFile`. Y comprobamos finalmente si el fichero ha sido cerrado. Entonces mostramos el mensaje correspondiente.
 
 
 ```TypeScript
+import * as fs from 'fs';
+import * as yargs from 'yargs';
+
+yargs.command({
+  command: 'watch',
+  describe: 'Specifies the path of the directory to watch',
+  builder: {
+    user: {
+      describe: 'Nombre del usuario',
+      demandOption: true,
+      type: 'string',
+    },
+    path: {
+      describe: 'ruta de la carpeta',
+      demandOption: true,
+      type: 'string',
+    },
+  },
+  handler(argv) {
+    if (typeof argv.user === 'string' && typeof argv.path === 'string') {
+      console.log(`todo va bien`);
+      const fileroute: string = argv.path + '/' + argv.user;
+      fs.access(fileroute, fs.constants.R_OK, (err)=>{
+        if (err) {
+          console.log(`El fichero ${fileroute} no existe.`);
+        } else {
+          console.log(`El fichero ./${argv.path}/${argv.user} si existe.`);
+          const look = fs.watch(fileroute, (type, filename) => {
+            const file = fileroute + '/' + filename;
+            if (type === 'rename') {
+              fs.access(file, fs.constants.F_OK, (err) => {
+                if (err) {
+                  console.log(`Se ha borrado el fichero con nombre' ${filename}' en ${fileroute}`);
+                } else {
+                  console.log(`Se ha creado el fichero con nombre' ${filename}' en ${fileroute}`);
+                  fs.readFile(file, 'utf8', (err, data)=> {
+                    if (err) {
+                      console.log(`No se ha podido leer el fichero`);
+                    } else {
+                      console.log(`El fichero ${filename}: `);
+                      console.log(data);
+                    }
+                  });
+                }
+              });
+            } else if (type === 'change') {
+              console.log(`Se ha modifiado el fichero ${file}`);
+              fs.readFile(file, 'utf8', (err, data) => {
+                if (err) {
+                  console.log(`No se ha podido leer el fichero`);
+                } else {
+                  console.log(`El contenido del fichero ${filename} es: `);
+                  console.log(data);
+                }
+              });
+            }
+          });
+          look.on('close', ()=> {
+            console.log(`Se ha cerrado el fichero`);
+          });
+        }
+      });
+    } else {
+      console.log(`el valor de algun argumento no es de tipo string`);
+    }
+  },
+});
+
+yargs.parse();
 
 ```
-Para las pruebas unitarias
+Para las pruebas unitarias no hemos podido realizar ninguna debido a que hacemos uso de yargs y no de estructuras de datos para poder analizar con el frame de `mocha`.
 
-```TypeScript
+Preguntas planteadas en este ejercicio:
 
-```
+* ¿Qué evento emite el objeto Watcher cuando se crea un nuevo fichero en el directorio observado? ¿Y cuando se elimina un fichero existente? ¿Y cuando se modifica?
+
+Un objeto Watcher emite un evento rename cuando un elemento aparece o desaparece de un directorio y cuando se modifica emite un evento change.
+
+* ¿Cómo haría para mostrar, no solo el nombre, sino también el contenido del fichero, en el caso de que haya sido creado o modificado?
+  
+  En este caso, lo he implementando, primero nos aseguramos que se pueda acceder al fichero con `fs.access` y posteriormente hago uso del método `fs.readFile` el cual recibe la ruta absoluta del fichero, la codificacion y un callback que determina si ha habido algún error o no. En caso de que no haya sucedido algun error, simplemente mostramos por consola el valor que contiene el fichero.
+
+* ¿Cómo haría para que no solo se observase el directorio de un único usuario sino todos los directorios correspondientes a los diferentes usuarios de la aplicación de notas?
+
+Para observar los cambios no solo de un fichero sino de todos los ficheros de los diferentes usuarios tendriamos que leer el contenido de todo el directorio con `fs.readdir`y almacenar en una variable sus contenidos para posteriormente recorrerlo y obtener las carpetas de cada usuario, es decir argv.user, y solo quedaría crear diversos objetos de tipo `watcher` por cada usuario que hay en el directorio.
+
+
+> Nota: Hay que tener en cuenta que tuve un problema a la hora de implementar este ejercicio que se comentará de forma más extensa en el apartado 3, dedicado a las dificultades que he tenido a lo largo de la implementacion de la práctica.
+
 <br/><br/>
 
 ### 2.4. Ejercicio 4. <a name="id24"></a>
@@ -627,6 +720,7 @@ De forma resumida los comandos implementados y su funcionamiento se resumen en:
   6. move -> Mover y copiar ficheros y/o directorios de una ruta a otra. Para este caso, la aplicación recibirá una ruta origen y una ruta destino. En caso de que la ruta origen represente un directorio, se debe copiar dicho directorio y todo su contenido a la ruta destino.
 ```
 
+Para las pruebas unitarias no hemos podido realizar ninguna debido a que hacemos uso de yargs y no de estructuras de datos para poder analizar con el frame de `mocha`.
 
 <br/><br/>
 
@@ -668,3 +762,4 @@ Se han cumplido todos los objetivos propuestos realizando los 4 ejercicios tal y
 22. [Expresiones regulares en JavaScript](https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Regular_Expressions)
 23. [Pipe en Node.JS](https://guru99.es/node-js-streams-filestream-pipes/)
 24. [Documentacion de Stream en Node.js](https://nodejs.org/api/stream.html)
+25. [Documentacion de Callbacks](https://nodejs.org/dist/latest/docs/api/fs.html#fs_callback_api)
