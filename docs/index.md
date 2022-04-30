@@ -36,15 +36,26 @@ El Objetivo de esta práctica es implementar diversas soluciones para resolver u
 
 ## 2. Desarrollo. <a name="id2"></a>
 
-La estructura que se ha adoptado en la raíz **src/** que contiene el código fuente de los diversos ejercicio es, tal y como se ha definido un conjunto de ficheros con nombre *ejercicio-n.ts*.
+La estructura que se ha adoptado en la raíz **src/** que contiene el código fuente de los diversos ejercicio es, tal y como se ha definido un conjunto de directorios con el nombre del ejercicios y dentro de este los diversos ficheros que implementan su funcionalidad con nombre *ejercicio-n.ts*.
 * **modificacion/**: Contiene la modificacion solicitada en el PE de los Lunes
   * **ejemplo.ts**: Fichero de ejemplo que se utizo para inicializar las diferentes actions al inicializar el respositorio
   * **modificacionLunes.ts**: Fichero que contiene la modificacion solicitada el lunes.
 
-* **ejercicio-1.ts**: Contiene el programa que se nos solicita que analicemos y comentemos en el ejercicio 1
-* **ejercicio-2.ts**: Contiene la solucion implementada para el ejercicio 2.
-* **ejercicio-3.ts**: Contiene la solucion implementada para el ejercicio 3.
-* **ejercicio-4.ts**: Contiene la solucion implementada para el ejercicio 4.
+
+* **ejercicio-1/**: directorio que contiene las soluciones al enunciado 1
+  * **ejercicio-1.ts**: Contiene el programa que se nos solicita que analicemos y comentemos en el ejercicio 1
+
+* **ejercicio-2/**: directorio que contiene las soluciones al enunciado 2
+  * **ejercicio-2.ts**: Contiene la solucion implementada para el ejercicio 2.
+  * **searchWord.ts**: Contiene la clase que se encarga de buscar.
+
+* **ejercicio-3/**: directorio que contiene las soluciones al enunciado 3
+  * **ejercicio-3.ts/**: Contiene la solucion implementada para el ejercicio 3.
+  * **app**: contiene los fichero que implementa la práctica 9
+  * **database**: contiene los ficheros que implementa la base de datos
+
+* **ejercicio-4/**: directorio que contiene las soluciones al enunciado 4
+  * **ejercicio-4.ts**: Contiene la solucion implementada para el ejercicio 4.
 
 A continuación vamos a explicar de forma más detallada las soluciones que he implementado:
 
@@ -218,23 +229,140 @@ Se ha encontrado 3 palabras que coinciden con Hola
 ```
 
 Toda esta funcionalidad la hemos desarrollado en el la carpeta src/ejercicio-2/*. Dentro podemos notar que se han creados dos ficheros.
-* **ejercicio-2.ts**
-* **searchWord.ts**
+
+* **ejercicio-2.ts**: implementa la función principal que se encarga de utilizar yargs para implementar el comando que se encarga de buscar. Para ello, como se hizo en la práctica anterior se usa `yargs`y se solicitan de forma obligatoria 3 parámetros para ejecutar la búsqueda. El primero es el nombre del fichero donde se desea buscar, el segundo es la palabra que se desea buscar dentro de ese fichero y la tercera es un flag (boolean) que determina si se desea realizar con pipe(true) o sin pipe (false). a continuación en el handler o el manejador lo que hacer es analizar si los tipos introducidos son correctos y posteriormente almacenamos los valores que se introdujo en variables y despues comprobamos que se puede acceder al fichero con el método acces de fs de node.js, en caso de que no podamos mostramos un mensaje y en caso de poder acceder al fichero que especifico el usuario creamos un objeto de tipo búsqueda al que le pasamos estos tres parámetros que puso el usuario y llamamos al método encargado de analizar el método con el que quiso buscar el usuario (si se desea que sea con pipe o no).
 
 ```TypeScript
+import * as fs from 'fs';
+import * as yargs from 'yargs';
+import {SearchWord} from './searchWord';
 
+function main() {
+  yargs.command({
+    command: 'search',
+    describe: 'Comando que busca el numero de una palabra en un fichero',
+    builder: {
+      file: {
+        describe: 'Nombre del fichero donde se desea buscar',
+        demandOption: true,
+        type: 'string',
+      },
+      word: {
+        describe: 'Palabra que se quiere buscar',
+        demandOption: true,
+        type: 'string',
+      },
+      pipe: {
+        describe: 'Flag que comprueba si se quiere a través de un pipe o no',
+        demandOption: true,
+        type: 'boolean',
+      },
+    },
+    handler(argv) {
+      if ((typeof argv.file === 'string') && (typeof argv.word === 'string')&& (typeof argv.pipe === 'boolean')) {
+        const filename:string = argv.file;
+        const wordToSearch:string = argv.word;
+        const pipeFlag: boolean = argv.pipe;
+        fs.access(filename, fs.constants.R_OK, (err) => {
+          if (err) {
+            console.log(`El fichero introducido no existe`);
+          } else {
+            console.log(`El fichero introducido si existe, su nombre es: ${filename}`);
+            const objectSearchable: SearchWord = new SearchWord(filename, wordToSearch, pipeFlag);
+            objectSearchable.flagTester();
+          }
+        });
+      }
+    },
+  });
+
+  yargs.parse();
+}
+
+main();
 
 ```
 
-```TypeScript
+* **searchWord.ts**: Que implementa la Clase encargada de realizar la busqueda a través del comando cat y grep del sistema Linux y que implementa diversos métodos que permiten buscar dentro de un fichero a través del uso de pipe o sin el uso de pipe. para ello se solicitan 3 objetos dentro del constructor, que serán los que se solicitan al usuario a través de linea de comando, para ello se inicializan estos atributos privados y posteriormente se crean 2 métodos privados y 1 publico. El publico es el **flagTester** que se encarga de analizar el pipe que introdujo el usuario en caso de ser false se llama al método privado de la clase que realiza la búsqueda sin pipe, en caso contrario se realiza la búsqueda utilizando pipe. Dentro de este método se inicializa con cat y grep los dos comandos de linuexcon la opcion de la ruta para el caso de cat y de la palabra para el caso de grep posteriormente se hace uso de la opcion *stdout.pipe* que se encarga de aplicar pipe dentro de estos dos comandos. Posteriormente declaramos dos variables una que se encargará de contar el numero de palabras y otra que ira alamacenando las palabras dentro del fichero. por lo que introducimos cada valor y lo covnertimos a strign una vez cerrado el fichero separamos por comas cada palabra recogida y analizamos en caso de que coincida esta palabra del fichero con la palabra que introdujo el usuario, sumamos 1 ocurrencia al contador y al finalizar analizamos el contador, en caso de ser 0 esque no se ha encontrado la palabra y en caso de que sea mayor estricto que 0 mostramos el numero de ocurrencias.
 
+El funcionamiento del método sin pipe es similar al anterior. la diferencia radica en como accedemos a los comandos en este caso como no utilizamos pipe lo que hago es declarar una variable que se encargará de ejecutar con spawn el comando cat y dentro de las opciones de cat añadimos que haga grep de la palabra que queremos buscar en el archivo y posteriormente operamos de la misma forma que se hizo en el caso anterior, es decir, declaramos las variables y analizamos tras sustituir todos los espacios por comas buscamos si la palabra se corresponde a la que el usuario introdujo en caso afirmativo sumamos +1 al contador y visualizamos al final el resultado de ocurrencias.
+
+```TypeScript
+import {spawn} from 'child_process';
+
+export class SearchWord {
+
+  constructor(private path: string, private word: string, private pipe: boolean) {
+    this.path = path;
+    this.word = word;
+    this.pipe = pipe;
+  }
+
+  flagTester() {
+    if (this.pipe == false) {
+      this.sinPipe();
+    } else {
+      this.conPipe();
+    }
+  }
+
+  private conPipe() {
+    const cat = spawn('cat', [this.path]);
+    const grep = spawn('grep', [this.word]);
+    cat.stdout.pipe(grep.stdin);
+    let count: number = 0;
+    let value: string = '';
+    grep.stdout.on('data', (item)=> {
+      value = item.toString();
+    });
+    grep.on('close', ()=> {
+      const result = value.split(/\s+/);
+      result.forEach((item) => {
+        if ((item == this.word) || item == this.word+'.') {
+          count = count + 1;
+        }
+      });
+      if (count == 0) {
+        console.log(`No se ha encontrado ninguna palabra que coincida con ${this.word}`);
+      } else {
+        console.log(`Se ha encontrado ${count} palabras que coinciden con ${this.word}`);
+      }
+    });
+  }
+
+  private sinPipe() {
+    const catAndGrep = spawn('cat', [this.path, 'grep', this.word]);
+    let count: number = 0;
+    let value: string = '';
+    catAndGrep.stdout.on('data', (item)=> {
+      value = item.toString();
+    });
+    catAndGrep.on('close', ()=> {
+      const result = value.split(/\s+/);
+      result.forEach((item) => {
+        if ((item == this.word) || item == this.word+'.') {
+          count = count + 1;
+        }
+      });
+      if (count == 0) {
+        console.log(`No se ha encontrado ninguna palabra que coincida con ${this.word}`);
+      } else {
+        console.log(`Se ha encontrado ${count} palabras que coinciden con ${this.word}`);
+      }
+    });
+  }
+}
 
 ```
 
+No se ha podido realizar pruebas por lo comentado con anterioridad.
 
 <br/><br/>
 
 ### 2.3. Ejercicio 3. <a name="id23"></a>
+
+En el ejercicio 3 nos solicitan 
+
 
 ```TypeScript
 
@@ -248,30 +376,272 @@ Para las pruebas unitarias
 
 ### 2.4. Ejercicio 4. <a name="id24"></a>
 
+En el ejercicio 4 nos solicitan:
 
-```TypeScript
+```
+Desarrollar una aplicación que permita hacer de wrapper de los distintos comandos empleados en Linux para el manejo de ficheros y directorios. En concreto, la aplicación deberá permitir:
+  1. Dada una ruta concreta, mostrar si es un directorio o un fichero.
+  2. Crear un nuevo directorio a partir de una nueva ruta que recibe como parámetro.
+  3. istar los ficheros dentro de un directorio.
+  4. Mostrar el contenido de un fichero (similar a ejecutar el comando cat).
+  5.Borrar ficheros y directorios.
+  6. Mover y copiar ficheros y/o directorios de una ruta a otra. Para este caso, la aplicación recibirá una ruta origen y una ruta destino. En caso de que la ruta origen represente un directorio, se debe copiar dicho directorio y todo su contenido a la ruta destino.
 
 ```
 
+Para implementar estos 6 comandos de linux referentes al manejo de fichero y directorios he decidido utilizar la herramiento `yargs` y crear 1 comando por cada especificación que nos solicitan. 
+
+De esta forma, para el primero encargado de analizar una ruta que introduce el usuario y determinar si es un fichero o un directorio hago uso de `spawn` de chil_process de node.js. por lo que recibimos de forma obligatoria una ruta por línea de comandos y en el manejador, comprobamos a través de un **callback** si se puede acceder a la ruta a través de fs.access, en caso de poder acceder, es decir, la ruta existe. Entonces intentamos abrir el fichero especificado en la ruta a través de `fs.open` en caso de que se pueda abrir, entonces la ruta corresponde a un fichero y si no se pudo abrir corresponde a un directorio. Y dependiendo de si se pudo abrir o no muestro un mensaje o otro.
+
 ```TypeScript
+import * as fs from 'fs';
+import yargs = require('yargs');
+import {spawn} from 'child_process';
+
+yargs.command( {
+  command: 'analizePath',
+  describe: 'Comprueba si la ruta especificada es un directorio o un fichero.',
+  builder: {
+    path: {
+      describe: 'Ruta del directorio o fichero.',
+      demandOption: true,
+      type: 'string',
+    },
+  },
+  handler(argv) {
+    if (typeof argv.path === "string") {
+      const valuePath = argv.path;
+      fs.access(valuePath, (err) => {
+        if (err) {
+          console.log(`El directorio o fichero no existe`);
+        } else {
+          fs.open(valuePath, fs.constants.O_DIRECTORY, (err) => {
+            if (err) {
+              console.log(`La ruta ${valuePath}, se corresponde a un fichero`);
+            } else {
+              console.log(`La ruta ${valuePath}, se corresponde a un directorio`);
+            }
+          });
+        }
+      });
+    } else {
+      console.log(`El valor introducido no es válido`);
+    }
+  },
+});
 
 ```
+
+Para el segundo comando, nos piden crear un nuevo directorio o fichero a través de una ruta dada por el usuario, por lo que al igual que se hizo anterior se solicita al usuario una ruta, en el manejador guardamos esta ruta en una variable que denominamos como *createFile*  y comprobamos que no exista ya un fichero con ese nombre o un directorio en esa ruta, despues hacemos uso de `fs.mkdir`que crea un directorio con la ruta dada.
+
+```TypeScript
+yargs.command( {
+  command: 'mkdir',
+  describe: 'Crea un directorio nuevo a partir de la ruta especificada.',
+  builder: {
+    path: {
+      describe: 'Ruta del directorio y su nombre.',
+      demandOption: true,
+      type: 'string',
+    },
+  },
+  handler(argv) {
+    if (typeof argv.path === "string") {
+      const createFile = argv.path;
+      fs.access(createFile, (err) => {
+        if (!err) {
+          console.log(`Ya existe el directorio ${createFile}`);
+        } else {
+          fs.mkdir(createFile, (err) => {
+            if (err) {
+              console.log(`La ruta especificada no es válida`);
+            } else {
+              console.log(`Se ha creado el directorio en la ruta ${createFile}`);
+            }
+          });
+        }
+      });
+    } else {
+      console.log(`El valor introducido no es válido`);
+    }
+  },
+});
+```
+
+Para el tercer comando nos solicitan listar todos los ficheros que hay en un directorio dado por el usuario a través de una ruta. Por lo que operamos de forma igual a como se ha hecho hasta ahora, la diferencia esque ahora en el manejador tras guardar la ruta en una variable y comprobar que se pueda acceder a esta ruta hacemos uso de `fs.ls` que nos da `spawn` de chil_proccess, y de esta forma visualizamos el contenido de esta ruta que ha introducido el usuario.
+
+```TypeScript
+yargs.command( {
+  command: 'listFile',
+  describe: 'Lista los ficheros que hay en el directorio que se especifica',
+  builder: {
+    path: {
+      describe: 'Ruta del directorio que se analizará',
+      demandOption: true,
+      type: 'string',
+    },
+  },
+  handler(argv) {
+    if (typeof argv.path === "string") {
+      const dirPath = argv.path;
+      fs.access(dirPath, (err) => {
+        if (err) {
+          console.log(`El directorio ${dirPath} no existe`);
+        } else {
+          console.log(`listando los archivos dentro de: ${dirPath}`);
+          const search = spawn('ls', [dirPath]);
+          search.stdout.pipe(process.stdout);
+        }
+      });
+    } else {
+      console.log(`El valor introducido no es válido`);
+    }
+  },
+});
+```
+
+Para el cuarto comando, nos piden mostrar el contenido de un fichero, dada a una ruta, similar a como funciona el comando `cat` por lo que se opera como se ha hecho hasta ahora una vez analizado el valor introducido en el manejador y guardada la ruta en la variable hacemos uso de spawn con el comando cat al que le pasamos la rita y mostramos todo el contenido del fichero con pipe `process.stdout`.
+
+```TypeScript
+yargs.command( {
+  command: 'show',
+  describe: 'Muestra el contenido de un fichero (similar al comando cat)',
+  builder: {
+    path: {
+      describe: 'Ruta del fichero que se quiere mostrar',
+      demandOption: true,
+      type: 'string',
+    },
+  },
+  handler(argv) {
+    if (typeof argv.path === "string") {
+      const showPath = argv.path;
+      fs.access(showPath, (err) => {
+        if (err) {
+          console.log(`el fichero perteneciente a la ruta ${showPath} no existe o se ha introducido mal su ruta.`);
+        } else {
+          fs.open(showPath, fs.constants.O_DIRECTORY, (err) => {
+            if (err) {
+              console.log();
+              const cat = spawn('cat', [showPath]);
+              cat.stdout.pipe(process.stdout);
+            } else {
+              console.log(`La ruta  ${showPath} no es un fichero, puede corresponder a un directorio`);
+            }
+          });
+        }
+      });
+    } else {
+      console.log(`El valor introducido no es válido`);
+    }
+  },
+});
+```
+Para el quinto comando nos piden dada una ruta eliminar el fichero o el directorio de forma recursiva,Por lo que realizamos lo mismo que se ha hecho en el resto de los comandos y ahora hacemos uso de spawn pero como el comando de linux `rm` con la opcion *-rf* que elimina un directorio o fichero de forma recursiva y sin preguntar por lo que al borrar algo importante  puede ser un error catastrofico. 
+
+```TypeScript
+yargs.command( {
+  command: 'delete',
+  describe: 'Borrar ficheros y directorios introducido por el usuario',
+  builder: {
+    path: {
+      describe: 'Ruta del directorio o fichero que se quiere eliminar',
+      demandOption: true,
+      type: 'string',
+    },
+  },
+  handler(argv) {
+    if (typeof argv.path === "string") {
+      const deletePath = argv.path;
+      fs.access(deletePath, (err) => {
+        if (err) {
+          console.log(`El directorio o fichero introducido ${deletePath} no existe`);
+        } else {
+          const deleteFile = spawn('rm', ['-rf', deletePath]);
+          deleteFile.on('close', (err) => {
+            if (err) {
+              console.log(`No se ha podido eliminar el fichero que ha introducido en la ruta ${deletePath}`);
+            } else {
+              console.log(`El directorio o fichero ${deletePath} se ha eliminado permanentemente`);
+            }
+          });
+        }
+      });
+    } else {
+      console.log(`El valor introducido no es válido`);
+    }
+  },
+});
+```
+
+Para el último comando se pide mover un fichero desde una ruta hacia otra. Para esto, se recoge a través de `yargs` dos opciones obligatorias, la ruta origen (from), que es aquella ruta donde se encuentra el fichero o directorio a mover y la ruta destino (to), que es la ruta donde se desea mover el fichero o directorio y guardar este mismo. Dentro del manejador comprobamos que se hayan introducido string y no otros valores y luego guardamos estos valores en dos variables y comprobamos que el fichero en la direccion origen exista a través de `fs.access` si existe el ficher y se ha podido acceder a el entonces usamos spawn pero con el comando `cp` que permite copiar un archivo de una ruta a otra. de esta forma con la opcion -r especificamos que se haga una copia del archivo de la direccion origen  en la direccion destino y le pasamos estas dos direcciones. Y tras cerrar el fichero o directorio abierto e ir todo bn mostramos un mensaje de exito.
+
+```TypeScript
+yargs.command( {
+  command: 'move',
+  describe: 'Mover y copiar ficheros y/o directorios de una ruta a otra.',
+  builder: {
+    from: {
+      describe: 'Ruta origen',
+      demandOption: true,
+      type: 'string',
+    },
+    to: {
+      describe: 'Ruta destino',
+      demandOption: true,
+      type: 'string',
+    },
+  },
+  handler(argv) {
+    if ((typeof argv.from === "string") && (typeof argv.to === "string")) {
+      const originPath = argv.from;
+      const destinationPath = argv.to;
+      fs.access(`${argv.from}`, (err) => {
+        if (err) {
+          console.log(`El fichero o directorio situado en ${originPath} no existe`);
+        } else {
+          const moveFile = spawn('cp', ['-r', originPath, destinationPath]);
+          moveFile.on('close', ()=> {
+            console.log(`El fichero o directorio situado en ${originPath} se ha movido y copiado al directorio ${destinationPath}`);
+          });
+        }
+      });
+    } else {
+      console.log(`El valor introducido no es válido`);
+    }
+  },
+});
+
+yargs.parse();
+
+```
+
+De forma resumida los comandos implementados y su funcionamiento se resumen en:
+
+```
+  1. analizePath -> Dada una ruta concreta, mostrar si es un directorio o un fichero.
+  2. mkdir -> Crear un nuevo directorio a partir de una nueva ruta que recibe como parámetro.
+  3. listFile -> listar los ficheros dentro de un directorio.
+  4. show -> Mostrar el contenido de un fichero (similar a ejecutar el comando cat).
+  5. delete -> Borrar ficheros y directorios.
+  6. move -> Mover y copiar ficheros y/o directorios de una ruta a otra. Para este caso, la aplicación recibirá una ruta origen y una ruta destino. En caso de que la ruta origen represente un directorio, se debe copiar dicho directorio y todo su contenido a la ruta destino.
+```
+
 
 <br/><br/>
 
 
 ## 3. Dificultades. <a name="id3"></a>
 
-Dentro de las dificultades encontradas dentro de esta práctica, me gustaría resaltar:
-* a
-* a
+Dentro de las dificultades encontradas dentro de esta práctica, me gustaría resaltar: 
+
+* la principal dificultad que he tenido a la hora de implementar el ejercicio numero 3, correspondiente a analizar los ficheros de la base de datos de un usuario para analizar si se añade, elimina o modifica una nota. En mi caso, tuve un problema debido a que tal y como implementé en la práctica anterior la base de datos, que está situada en el directorio **database**, para lo que hago es crear un fichero de tipo *JSON* con el nombre del usuairo y dentro alamaceno todas las notas correspondiente a este usuario. Sin embargo, el metodo watch de fs mira un directorio y mi base de datos no esta compuesta por directorios con el nombre del usuario y dentro el fichero. Por lo que he tenido que adaptar la estructura de la base de datos a la comentada anteriormente para analizar el correcto funcionamiento.
+
+* Otro problema que he tenido es la ejecución de los test puesto que no he podido crear pruebas de test con `mocha` debido a que solo funcionan los test con estructuras de datos. Cosa que no estamos utilizando Node.js para la solución de estos ejercicios planteados.
 
 ## 4. Conclusión. <a name="id4"></a>
 
-Los objetivos que se han propuesto y se han cumplido son:
-* a
-* a
-* a
+Se han cumplido todos los objetivos propuestos realizando los 4 ejercicios tal y como se plantearon a excepcion del problema comentado en el apartado anterior, pero pese a este inconveniente, el programa funciona correctamente tal y como se espera. De esta forma hemos realizado un ejercicio que explica el funcionamiento de la cola y las pilas de `Node.js` y la gestion por parte del sistema de las mismas, también se ha implementado un programa que permite buscar en un archivo de texto el número total de ocurrencias dentro de un fichero de texto, también se ha reutilizado el código de la práctica anterior y se ha creado un fichero que permite implementar un comando que observa para esta base de datos si se añade, elimina o modifica algun fichero y por último se ha realizado una serie de comandos que implementan un wrapper de tal manera que permite simular diversos comandos de linux tal y como se especificaba en el guión de la práctica.
 
 ## 5. Referencias. <a name="id5"></a>
 1. [Github](http://github.com)

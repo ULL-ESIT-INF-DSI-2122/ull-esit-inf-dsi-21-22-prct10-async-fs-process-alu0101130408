@@ -217,6 +217,8 @@ yargs.command( {
           });
         }
       });
+    } else {
+      console.log(`El valor introducido no es válido`);
     }
   },
 });
